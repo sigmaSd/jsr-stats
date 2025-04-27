@@ -1,219 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSR Module Usage Statistics</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f7f6;
-            color: #333;
-        }
+      body {
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f7f6;
+        color: #333;
+      }
 
-        h1 {
-            text-align: center;
-            color: #2a3d45;
-            margin-bottom: 5px; /* Reduced margin below h1 */
-        }
+      h1 {
+        text-align: center;
+        color: #2a3d45;
+        margin-bottom: 5px; /* Reduced margin below h1 */
+      }
 
-        /* Style for the source code link */
-        .source-link {
-            display: block; /* Make it a block element */
-            text-align: center; /* Center the text */
-            margin-bottom: 25px; /* Space below the link */
-            font-size: 0.9em; /* Slightly smaller font */
-        }
-        .source-link a {
-            color: #0056b3;
-            text-decoration: none;
-        }
-        .source-link a:hover {
-            text-decoration: underline;
-        }
+      /* Style for the source code link */
+      .source-link {
+        display: block; /* Make it a block element */
+        text-align: center; /* Center the text */
+        margin-bottom: 25px; /* Space below the link */
+        font-size: 0.9em; /* Slightly smaller font */
+      }
+      .source-link a {
+        color: #0056b3;
+        text-decoration: none;
+      }
+      .source-link a:hover {
+        text-decoration: underline;
+      }
 
+      #statsTable {
+        width: 80%;
+        margin: 30px auto;
+        border-collapse: collapse;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+      }
 
-        #statsTable {
-            width: 80%;
-            margin: 30px auto;
-            border-collapse: collapse;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
-        }
+      #statsTable th, #statsTable td {
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        text-align: left;
+        vertical-align: middle; /* Align content vertically */
+      }
 
-        #statsTable th, #statsTable td {
-            border: 1px solid #ddd;
-            padding: 12px 15px;
-            text-align: left;
-            vertical-align: middle; /* Align content vertically */
-        }
+      #statsTable thead th {
+        background-color: #4a7c59;
+        color: #ffffff;
+        font-weight: bold;
+        /* No cursor pointer as sorting is disabled */
+      }
 
-        #statsTable thead th {
-            background-color: #4a7c59;
-            color: #ffffff;
-            font-weight: bold;
-            /* No cursor pointer as sorting is disabled */
-        }
+      #statsTable tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
 
-        #statsTable tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+      #statsTable tbody tr:hover {
+        background-color: #eef;
+      }
 
-        #statsTable tbody tr:hover {
-            background-color: #eef;
-        }
+      /* Style links within the table */
+      #statsTable td a {
+        color: #0056b3; /* Standard link blue */
+        text-decoration: none; /* Remove underline by default */
+      }
+      #statsTable td a:hover {
+        text-decoration: underline; /* Underline on hover */
+        color: #003d80;
+      }
 
-        /* Style links within the table */
-        #statsTable td a {
-            color: #0056b3; /* Standard link blue */
-            text-decoration: none; /* Remove underline by default */
-        }
-        #statsTable td a:hover {
-            text-decoration: underline; /* Underline on hover */
-            color: #003d80;
-        }
+      #statsTable td:nth-child(3) {
+        /* Align count to the right */
+        text-align: right;
+        font-family: Consolas, monospace; /* Monospace for numbers */
+      }
 
-
-        #statsTable td:nth-child(3) { /* Align count to the right */
-            text-align: right;
-            font-family: Consolas, monospace; /* Monospace for numbers */
-        }
-
-        .loading, .error {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            color: #666;
-        }
-         .error {
-             color: #d9534f;
-             font-weight: bold;
-         }
-
+      .loading, .error {
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+        color: #666;
+      }
+      .error {
+        color: #d9534f;
+        font-weight: bold;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <h1>JSR Module Usage Statistics</h1>
 
     <!-- Added Source Code Link -->
     <div class="source-link">
-        <a href="https://github.com/sigmaSd/jsr-stats" target="_blank" rel="noopener noreferrer">
-            Source Code on GitHub
-        </a>
+      <a
+        href="https://github.com/sigmaSd/jsr-stats"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Source Code on GitHub
+      </a>
     </div>
 
     <table id="statsTable">
-        <thead>
-            <tr>
-                <!-- Headers are no longer sortable -->
-                <th>Scope</th>
-                <th>Name</th>
-                <th>Download Count</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- Data rows will be inserted here by JavaScript -->
-            <tr>
-                <td colspan="3" class="loading">Loading data...</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <!-- Headers are no longer sortable -->
+          <th>Scope</th>
+          <th>Name</th>
+          <th>Download Count</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Data rows will be inserted here by JavaScript -->
+        <tr>
+          <td colspan="3" class="loading">Loading data...</td>
+        </tr>
+      </tbody>
     </table>
 
     <script>
-        const tableBody = document.getElementById('tableBody');
-        const dataUrl = 'packages-count.json'; // Make sure this file exists
-        const initialSortColumn = 'count';
-        const initialSortOrder = 'desc';
+      const tableBody = document.getElementById("tableBody");
+      const dataUrl = "packages-count.json"; // Make sure this file exists
+      const initialSortColumn = "count";
+      const initialSortOrder = "desc";
 
-        // --- Data Fetching ---
-        async function fetchData() {
-            try {
-                const response = await fetch(dataUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const originalData = await response.json();
+      // --- Data Fetching ---
+      async function fetchData() {
+        try {
+          const response = await fetch(dataUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const originalData = await response.json();
 
-                // Sort the data once on load
-                const sortedData = sortData(originalData, initialSortColumn, initialSortOrder);
+          // Sort the data once on load
+          const sortedData = sortData(
+            originalData,
+            initialSortColumn,
+            initialSortOrder,
+          );
 
-                // Render the sorted data
-                renderTable(sortedData);
+          // Render the sorted data
+          renderTable(sortedData);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          tableBody.innerHTML =
+            `<tr><td colspan="3" class="error">Failed to load data: ${error.message}</td></tr>`;
+        }
+      }
 
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                tableBody.innerHTML = `<tr><td colspan="3" class="error">Failed to load data: ${error.message}</td></tr>`;
-            }
+      // --- Sorting Logic (only used for initial sort) ---
+      function sortData(data, column, order = "asc") {
+        // Create a copy to avoid modifying the original fetched array if needed elsewhere
+        const sortedData = [...data];
+
+        sortedData.sort((a, b) => {
+          let valA = a[column];
+          let valB = b[column];
+
+          // Handle numeric vs string comparison
+          if (typeof valA === "number" && typeof valB === "number") {
+            return order === "asc" ? valA - valB : valB - valA;
+          } else {
+            // Basic string comparison (case-insensitive)
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            if (valA < valB) return order === "asc" ? -1 : 1;
+            if (valA > valB) return order === "asc" ? 1 : -1;
+            return 0;
+          }
+        });
+        return sortedData;
+      }
+
+      // --- Rendering Logic ---
+      function renderTable(data) {
+        tableBody.innerHTML = ""; // Clear previous content (loading/error message or old data)
+
+        if (!data || data.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="3" class="loading">No data found.</td></tr>';
+          return;
         }
 
-        // --- Sorting Logic (only used for initial sort) ---
-        function sortData(data, column, order = 'asc') {
-            // Create a copy to avoid modifying the original fetched array if needed elsewhere
-            const sortedData = [...data];
+        data.forEach((item) => {
+          const row = tableBody.insertRow();
 
-            sortedData.sort((a, b) => {
-                let valA = a[column];
-                let valB = b[column];
+          // Scope Cell (with link)
+          const scopeCell = row.insertCell();
+          const scopeLink = document.createElement("a");
+          scopeLink.href = `https://jsr.io/@${item.scope}`;
+          scopeLink.textContent = item.scope;
+          scopeLink.target = "_blank"; // Open in new tab
+          scopeLink.rel = "noopener noreferrer"; // Security best practice
+          scopeCell.appendChild(scopeLink);
 
-                // Handle numeric vs string comparison
-                if (typeof valA === 'number' && typeof valB === 'number') {
-                    return order === 'asc' ? valA - valB : valB - valA;
-                } else {
-                    // Basic string comparison (case-insensitive)
-                    valA = String(valA).toLowerCase();
-                    valB = String(valB).toLowerCase();
-                    if (valA < valB) return order === 'asc' ? -1 : 1;
-                    if (valA > valB) return order === 'asc' ? 1 : -1;
-                    return 0;
-                }
-            });
-            return sortedData;
-        }
+          // Name Cell (with link)
+          const nameCell = row.insertCell();
+          const nameLink = document.createElement("a");
+          nameLink.href = `https://jsr.io/@${item.scope}/${item.name}`;
+          nameLink.textContent = item.name;
+          nameLink.target = "_blank"; // Open in new tab
+          nameLink.rel = "noopener noreferrer"; // Security best practice
+          nameCell.appendChild(nameLink);
 
-        // --- Rendering Logic ---
-        function renderTable(data) {
-            tableBody.innerHTML = ''; // Clear previous content (loading/error message or old data)
+          // Count Cell (no link)
+          const countCell = row.insertCell();
+          countCell.textContent = item.count.toLocaleString(); // Format number
+        });
+      }
 
-            if (!data || data.length === 0) {
-                 tableBody.innerHTML = '<tr><td colspan="3" class="loading">No data found.</td></tr>';
-                 return;
-            }
-
-            data.forEach(item => {
-                const row = tableBody.insertRow();
-
-                // Scope Cell (with link)
-                const scopeCell = row.insertCell();
-                const scopeLink = document.createElement('a');
-                scopeLink.href = `https://jsr.io/@${item.scope}`;
-                scopeLink.textContent = item.scope;
-                scopeLink.target = "_blank"; // Open in new tab
-                scopeLink.rel = "noopener noreferrer"; // Security best practice
-                scopeCell.appendChild(scopeLink);
-
-                // Name Cell (with link)
-                const nameCell = row.insertCell();
-                const nameLink = document.createElement('a');
-                nameLink.href = `https://jsr.io/@${item.scope}/${item.name}`;
-                nameLink.textContent = item.name;
-                nameLink.target = "_blank"; // Open in new tab
-                nameLink.rel = "noopener noreferrer"; // Security best practice
-                nameCell.appendChild(nameLink);
-
-                // Count Cell (no link)
-                const countCell = row.insertCell();
-                countCell.textContent = item.count.toLocaleString(); // Format number
-            });
-        }
-
-        // --- Initial Load ---
-        // Fetch data when the page structure is ready
-        document.addEventListener('DOMContentLoaded', fetchData);
-
+      // --- Initial Load ---
+      // Fetch data when the page structure is ready
+      document.addEventListener("DOMContentLoaded", fetchData);
     </script>
-
-</body>
+  </body>
 </html>
