@@ -51,7 +51,10 @@ async function updateStats() {
   console.log("Time taken:", performance.now() - now);
   clearInterval(writeID);
   pkgs.sort((a, b) => b.count - a.count);
-  Deno.writeTextFileSync("packages-count.json", JSON.stringify(pkgs, null, 2));
+  await Deno.writeTextFile(
+    "packages-count.json",
+    JSON.stringify(pkgs, null, 2),
+  );
 }
 
 if (import.meta.main) {
