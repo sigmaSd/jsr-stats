@@ -8,14 +8,6 @@ async function updateStats() {
     "https://api.jsr.io/scopes/${SCOPE}/packages/${NAME}/downloads";
 
   const pkgs: { scope: string; name: string; count: number }[] = [];
-  const writeID = setInterval(
-    async () =>
-      await Deno.writeTextFile(
-        "packages-count.json",
-        JSON.stringify(pkgs, null, 2),
-      ),
-    5000,
-  );
   let done = 0;
   const now = performance.now();
   await Array.fromAsync(
@@ -49,7 +41,6 @@ async function updateStats() {
     }),
   );
   console.log("Time taken:", performance.now() - now);
-  clearInterval(writeID);
   pkgs.sort((a, b) => b.count - a.count);
   await Deno.writeTextFile(
     "packages-count.json",
