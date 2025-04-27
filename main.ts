@@ -29,10 +29,9 @@ async function updateStats() {
           const scope = pkg.scope;
           const name = pkg.name;
           const stats: { total: [{ count: number }] } = await fetch(
-            PACKAGE_DOWNLOAD_API.replace("${SCOPE}", scope).replace(
-              "${NAME}",
-              name,
-            ),
+            PACKAGE_DOWNLOAD_API
+              .replace("${SCOPE}", scope)
+              .replace("${NAME}", name),
           ).then((r) => r.json());
           const count = stats.total.map((item) => item.count).reduce(
             (acc, curr) => acc + curr,
