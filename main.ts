@@ -7,11 +7,16 @@ async function updateStats() {
   const PACKAGE_DOWNLOAD_API =
     "https://api.jsr.io/scopes/${SCOPE}/packages/${NAME}/downloads";
 
+  // initial requests to guess pages count
+  const pages = await fetch(PACKAGES_API)
+    .then((r) => r.json())
+    .then((r) => Math.ceil(r.total / r.items.length));
+
   const pkgs: { scope: string; name: string; count: number }[] = [];
   let done = 0;
   const now = performance.now();
   await Array.fromAsync(
-    pooledMap(10, range(1, 114), async (page: number) => {
+    pooledMap(10, range(1, pages), async (page: number) => {
       const packages: {
         items: { scope: string; name: string }[];
         total: number;
@@ -49,6 +54,7 @@ async function updateStats() {
 }
 
 if (import.meta.main) {
+  await updateStats();
   console.log("Cron job started, updating stats every day");
   Deno.cron("update stats", "0 0 * * *", async () => {
     await updateStats();
