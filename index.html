@@ -81,7 +81,7 @@
         color: #003d80;
       }
 
-      #statsTable td:nth-child(3) {
+      #statsTable td:nth-child(4) {
         /* Align count to the right */
         text-align: right;
         font-family: Consolas, monospace; /* Monospace for numbers */
@@ -117,6 +117,7 @@
       <thead>
         <tr>
           <!-- Headers are no longer sortable -->
+          <th>Rank</th>
           <th>Scope</th>
           <th>Name</th>
           <th>Download Count</th>
@@ -195,10 +196,15 @@
           return;
         }
 
-        data.forEach((item) => {
+        data.entries().forEach(([idx,item]) => {
           const row = tableBody.insertRow();
 
           // Scope Cell (with link)
+          const rankCell = row.insertCell();
+          const rank = document.createElement("span");
+          rank.textContent = idx + 1;
+          rankCell.appendChild(rank);
+
           const scopeCell = row.insertCell();
           const scopeLink = document.createElement("a");
           scopeLink.href = `https://jsr.io/@${item.scope}`;
