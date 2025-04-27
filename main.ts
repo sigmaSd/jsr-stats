@@ -33,10 +33,8 @@ async function updateStats() {
               .replace("${SCOPE}", scope)
               .replace("${NAME}", name),
           ).then((r) => r.json());
-          const count = stats.total.map((item) => item.count).reduce(
-            (acc, curr) => acc + curr,
-            0,
-          );
+          const count = stats.total.map((item) => item.count)
+            .reduce((acc, curr) => acc + curr, 0);
           done++;
           console.log(`[${done}/${packages.total}]`, { scope, name, count });
           pkgs.push({ scope, name, count });
