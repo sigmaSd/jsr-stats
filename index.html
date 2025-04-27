@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> JSR Module Usage Statistics</title>
+    <title>JSR Module Usage Statistics</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -16,7 +16,24 @@
         h1 {
             text-align: center;
             color: #2a3d45;
+            margin-bottom: 5px; /* Reduced margin below h1 */
         }
+
+        /* Style for the source code link */
+        .source-link {
+            display: block; /* Make it a block element */
+            text-align: center; /* Center the text */
+            margin-bottom: 25px; /* Space below the link */
+            font-size: 0.9em; /* Slightly smaller font */
+        }
+        .source-link a {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .source-link a:hover {
+            text-decoration: underline;
+        }
+
 
         #statsTable {
             width: 80%;
@@ -81,6 +98,13 @@
 
     <h1>JSR Module Usage Statistics</h1>
 
+    <!-- Added Source Code Link -->
+    <div class="source-link">
+        <a href="https://github.com/sigmaSd/jsr-stats" target="_blank" rel="noopener noreferrer">
+            Source Code on GitHub
+        </a>
+    </div>
+
     <table id="statsTable">
         <thead>
             <tr>
@@ -100,7 +124,7 @@
 
     <script>
         const tableBody = document.getElementById('tableBody');
-        const dataUrl = 'packages-count.json';
+        const dataUrl = 'packages-count.json'; // Make sure this file exists
         const initialSortColumn = 'count';
         const initialSortOrder = 'desc';
 
