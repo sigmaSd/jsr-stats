@@ -30,7 +30,7 @@
       .source-link {
         display: block; /* Make it a block element */
         text-align: center; /* Center the text */
-        margin-bottom: 25px; /* Space below the link */
+        margin-bottom: 20px; /* Space below the link */
         font-size: 0.9em; /* Slightly smaller font */
       }
       .source-link a {
@@ -41,8 +41,25 @@
         text-decoration: underline;
       }
 
+      /* Container for sorting controls */
+      .sort-controls {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .sort-controls label {
+        margin-right: 8px;
+        font-weight: bold;
+      }
+      .sort-controls select {
+        padding: 5px 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #fff;
+        cursor: pointer;
+      }
+
       #statsTable {
-        width: 80%;
+        width: 85%; /* Slightly wider to accommodate new column */
         margin: 30px auto;
         border-collapse: collapse;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -60,7 +77,6 @@
         background-color: #4a7c59;
         color: #ffffff;
         font-weight: bold;
-        /* No cursor pointer as sorting is disabled */
       }
 
       #statsTable tbody tr:nth-child(even) {
@@ -81,10 +97,17 @@
         color: #003d80;
       }
 
-      #statsTable td:nth-child(4) {
-        /* Align count to the right */
+      /* Align numeric counts (Download & Dependent) to the right */
+      #statsTable td:nth-child(4),
+      #statsTable td:nth-child(5) {
         text-align: right;
         font-family: Consolas, monospace; /* Monospace for numbers */
+      }
+
+      /* Align numeric headers to the right as well */
+      #statsTable th:nth-child(4),
+      #statsTable th:nth-child(5) {
+        text-align: right;
       }
 
       .loading, .error {
@@ -102,7 +125,7 @@
   <body>
     <h1>JSR Module Usage Statistics</h1>
 
-    <!-- Added Source Code Link -->
+    <!-- Source Code Link -->
     <div class="source-link">
       <a
         href="https://github.com/sigmaSd/jsr-stats"
@@ -113,29 +136,40 @@
       </a>
     </div>
 
+    <!-- Sorting Controls -->
+    <div class="sort-controls">
+      <label for="sortSelect">Sort by:</label>
+      <select id="sortSelect">
+        <option value="count" selected>Download Count</option>
+        <option value="dependentCount">Dependent Count</option>
+      </select>
+    </div>
+
     <table id="statsTable">
       <thead>
         <tr>
-          <!-- Headers are no longer sortable -->
           <th>Rank</th>
           <th>Scope</th>
           <th>Name</th>
           <th>Download Count</th>
+          <th>Dependent Count</th>
         </tr>
       </thead>
       <tbody id="tableBody">
         <!-- Data rows will be inserted here by JavaScript -->
         <tr>
-          <td colspan="3" class="loading">Loading data...</td>
+          <td colspan="5" class="loading">Loading data...</td>
         </tr>
       </tbody>
     </table>
 
     <script>
       const tableBody = document.getElementById("tableBody");
-      const dataUrl = "packages-count.json"; // Make sure this file exists
-      const initialSortColumn = "count";
-      const initialSortOrder = "desc";
+      const sortSelect = document.getElementById("sortSelect"); // Get the select element
+      const dataUrl = "packages-count.json";
+      const initialSortOrder = "desc"; // Always sort descending for counts
+
+      let originalData = []; // Store the original fetched data
 
       // --- Data Fetching ---
       async function fetchData() {
@@ -144,26 +178,19 @@
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
-          const originalData = await response.json();
+          originalData = await response.json(); // Store fetched data
 
-          // Sort the data once on load
-          const sortedData = sortData(
-            originalData,
-            initialSortColumn,
-            initialSortOrder,
-          );
-
-          // Render the sorted data
-          renderTable(sortedData);
+          // Perform initial sort based on the default select value
+          handleSort();
         } catch (error) {
           console.error("Error fetching data:", error);
           tableBody.innerHTML =
-            `<tr><td colspan="3" class="error">Failed to load data: ${error.message}</td></tr>`;
+            `<tr><td colspan="5" class="error">Failed to load data: ${error.message}</td></tr>`; // Updated colspan
         }
       }
 
-      // --- Sorting Logic (only used for initial sort) ---
-      function sortData(data, column, order = "asc") {
+      // --- Sorting Logic ---
+      function sortData(data, column, order = "desc") { // Default order to desc
         // Create a copy to avoid modifying the original fetched array if needed elsewhere
         const sortedData = [...data];
 
@@ -171,11 +198,15 @@
           let valA = a[column];
           let valB = b[column];
 
-          // Handle numeric vs string comparison
+          // Handle potential missing values for dependentCount gracefully
+          valA = valA === undefined || valA === null ? 0 : valA;
+          valB = valB === undefined || valB === null ? 0 : valB;
+
+          // Handle numeric vs string comparison (though both counts should be numeric)
           if (typeof valA === "number" && typeof valB === "number") {
             return order === "asc" ? valA - valB : valB - valA;
           } else {
-            // Basic string comparison (case-insensitive)
+            // Fallback for unexpected types (less likely with counts)
             valA = String(valA).toLowerCase();
             valB = String(valB).toLowerCase();
             if (valA < valB) return order === "asc" ? -1 : 1;
@@ -188,29 +219,28 @@
 
       // --- Rendering Logic ---
       function renderTable(data) {
-        tableBody.innerHTML = ""; // Clear previous content (loading/error message or old data)
+        tableBody.innerHTML = ""; // Clear previous content
 
         if (!data || data.length === 0) {
           tableBody.innerHTML =
-            '<tr><td colspan="3" class="loading">No data found.</td></tr>';
+            '<tr><td colspan="5" class="loading">No data found.</td></tr>'; // Updated colspan
           return;
         }
 
-        data.entries().forEach(([idx,item]) => {
+        data.forEach((item, idx) => { // Use forEach directly with index
           const row = tableBody.insertRow();
 
-          // Scope Cell (with link)
+          // Rank Cell
           const rankCell = row.insertCell();
-          const rank = document.createElement("span");
-          rank.textContent = idx + 1;
-          rankCell.appendChild(rank);
+          rankCell.textContent = idx + 1;
 
+          // Scope Cell (with link)
           const scopeCell = row.insertCell();
           const scopeLink = document.createElement("a");
           scopeLink.href = `https://jsr.io/@${item.scope}`;
           scopeLink.textContent = item.scope;
-          scopeLink.target = "_blank"; // Open in new tab
-          scopeLink.rel = "noopener noreferrer"; // Security best practice
+          scopeLink.target = "_blank";
+          scopeLink.rel = "noopener noreferrer";
           scopeCell.appendChild(scopeLink);
 
           // Name Cell (with link)
@@ -218,19 +248,37 @@
           const nameLink = document.createElement("a");
           nameLink.href = `https://jsr.io/@${item.scope}/${item.name}`;
           nameLink.textContent = item.name;
-          nameLink.target = "_blank"; // Open in new tab
-          nameLink.rel = "noopener noreferrer"; // Security best practice
+          nameLink.target = "_blank";
+          nameLink.rel = "noopener noreferrer";
           nameCell.appendChild(nameLink);
 
-          // Count Cell (no link)
+          // Download Count Cell
           const countCell = row.insertCell();
-          countCell.textContent = item.count.toLocaleString(); // Format number
+          // Use 0 if count is missing/null
+          countCell.textContent = (item.count ?? 0).toLocaleString();
+
+          // Dependent Count Cell (New)
+          const dependentCountCell = row.insertCell();
+          // Use 0 if dependentCount is missing/null
+          dependentCountCell.textContent = (item.dependentCount ?? 0)
+            .toLocaleString();
         });
       }
 
-      // --- Initial Load ---
-      // Fetch data when the page structure is ready
-      document.addEventListener("DOMContentLoaded", fetchData);
+      // --- Handle Sorting ---
+      function handleSort() {
+        const sortByColumn = sortSelect.value; // Get selected column ('count' or 'dependentCount')
+        const sortedData = sortData(
+          originalData,
+          sortByColumn,
+          initialSortOrder,
+        );
+        renderTable(sortedData);
+      }
+
+      // --- Initial Load & Event Listener ---
+      document.addEventListener("DOMContentLoaded", fetchData); // Fetch data on load
+      sortSelect.addEventListener("change", handleSort); // Re-sort when selection changes
     </script>
   </body>
 </html>

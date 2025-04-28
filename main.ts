@@ -6,19 +6,27 @@ async function updateStats() {
   const PACKAGES_API = "https://api.jsr.io/packages";
   const PACKAGE_DOWNLOAD_API =
     "https://api.jsr.io/scopes/${SCOPE}/packages/${NAME}/downloads";
+  const PACKAGE_INFO_API =
+    "https://api.jsr.io/scopes/${SCOPE}/packages/${NAME}";
 
   // initial requests to guess pages count
   const pages = await fetch(PACKAGES_API)
     .then((r) => r.json())
     .then((r) => Math.ceil(r.total / r.items.length));
 
-  const pkgs: { scope: string; name: string; count: number }[] = [];
+  const pkgs: {
+    scope: string;
+    name: string;
+    count: number;
+    dependentCount: number;
+    score: number | null;
+  }[] = [];
   let done = 0;
   const now = performance.now();
   await Array.fromAsync(
     pooledMap(10, range(1, pages), async (page: number) => {
       const packages: {
-        items: { scope: string; name: string }[];
+        items: { scope: string; name: string; score: number }[];
         total: number;
       } = await fetch(
         PACKAGES_API + `?page=${page}`,
@@ -28,6 +36,11 @@ async function updateStats() {
         pooledMap(90, packages.items.entries(), async ([_idx, pkg]) => {
           const scope = pkg.scope;
           const name = pkg.name;
+          const info = await fetch(
+            PACKAGE_INFO_API
+              .replace("${SCOPE}", scope)
+              .replace("${NAME}", name),
+          ).then((r) => r.json());
           const stats: { total: [{ count: number }] } = await fetch(
             PACKAGE_DOWNLOAD_API
               .replace("${SCOPE}", scope)
@@ -36,8 +49,20 @@ async function updateStats() {
           const count = stats.total.map((item) => item.count)
             .reduce((acc, curr) => acc + curr, 0);
           done++;
-          console.log(`[${done}/${packages.total}]`, { scope, name, count });
-          pkgs.push({ scope, name, count });
+          console.log(`[${done}/${packages.total}]`, {
+            scope,
+            name,
+            count,
+            score: pkg.score,
+            dependentCount: info.dependentCount,
+          });
+          pkgs.push({
+            scope,
+            name,
+            count,
+            score: pkg.score,
+            dependentCount: info.dependentCount,
+          });
         }),
       );
     }),
