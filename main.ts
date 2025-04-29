@@ -90,7 +90,6 @@ async function updateStats() {
 }
 
 if (import.meta.main) {
-  await updateStats(); // TEMPORARY
   console.log("Cron job started, updating stats every day");
   Deno.cron("update stats", "0 0 * * *", async () => {
     console.log("Updating stats...");
