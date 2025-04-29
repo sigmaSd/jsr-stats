@@ -2,6 +2,8 @@ import { serveFile } from "jsr:@std/http@1/file-server";
 import { pooledMap } from "jsr:@std/async@1/pool";
 import { range } from "jsr:@alg/range@0.0.4";
 
+const KV = await Deno.openKv();
+
 async function updateStats() {
   const PACKAGES_API = "https://api.jsr.io/packages";
   const PACKAGE_DOWNLOAD_API =
@@ -32,6 +34,9 @@ async function updateStats() {
         PACKAGES_API + `?page=${page}`,
       ).then((r) => r.json());
 
+      if (packages.items === undefined) {
+        throw new Error("failed to get items: " + JSON.stringify(packages));
+      }
       await Array.fromAsync(
         pooledMap(90, packages.items.entries(), async ([_idx, pkg]) => {
           const scope = pkg.scope;
@@ -69,24 +74,46 @@ async function updateStats() {
   );
   console.log("Time taken:", performance.now() - now);
   pkgs.sort((a, b) => b.count - a.count);
-  await Deno.writeTextFile(
-    "packages-count.json",
-    JSON.stringify(pkgs, null, 2),
-  );
+  // Not possible in deno deploy, lets just use Deno.KV
+  // await Deno.writeTextFile(
+  //   "packages-count.json",
+  //   JSON.stringify(pkgs, null, 2),
+  // );
+
+  // kv have a max size 65536 per set
+  // so we will split it to parts
+  const chunkSize = 100;
+  for (let i = 0; i < pkgs.length; i += chunkSize) {
+    const chunk = pkgs.slice(i, i + chunkSize);
+    await KV.set(["packages", "count", i], chunk);
+  }
 }
 
 if (import.meta.main) {
+  await updateStats(); // TEMPORARY
   console.log("Cron job started, updating stats every day");
   Deno.cron("update stats", "0 0 * * *", async () => {
     console.log("Updating stats...");
     await updateStats();
   });
 
-  Deno.serve((req) => {
+  Deno.serve(async (req) => {
     const url = req.url;
     const path = new URL(url).pathname;
     if (path === "/") {
       return serveFile(req, "index.html");
+    } else if (path === "/pkgs-count") {
+      const pkgs = (await Array.fromAsync(
+        KV.list({ prefix: ["packages", "count"] }),
+      ))
+        .map(({ key: _key, value }) => {
+          return value;
+        })
+        // deno-lint-ignore no-explicit-any
+        .reduce((acc: any, curr) => acc.concat(curr), []);
+      return new Response(JSON.stringify(pkgs), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
     return serveFile(req, path.slice(1)); // remove leading slash
   });
