@@ -2,9 +2,7 @@ import { serveFile } from "jsr:@std/http@1/file-server";
 import { pooledMap } from "jsr:@std/async@1/pool";
 import { range } from "jsr:@alg/range@0.0.4";
 
-const KV = await Deno.openKv();
-
-async function updateStats() {
+async function updateStats(kv: Deno.Kv) {
   const PACKAGES_API = "https://api.jsr.io/packages";
   const PACKAGE_DOWNLOAD_API =
     "https://api.jsr.io/scopes/${SCOPE}/packages/${NAME}/downloads";
@@ -85,19 +83,19 @@ async function updateStats() {
   const chunkSize = 100;
   for (let i = 0; i < pkgs.length; i += chunkSize) {
     const chunk = pkgs.slice(i, i + chunkSize);
-    await KV.set(["packages", "count", i], chunk);
+    await kv.set(["packages", "count", i], chunk);
   }
 }
 
-function startCronJob() {
+function startCronJob(kv: Deno.Kv) {
   console.log("Cron job started, updating stats every day");
   Deno.cron("update stats", "0 0 * * *", async () => {
     console.log("Updating stats...");
-    await updateStats();
+    await updateStats(kv);
   });
 }
 
-function startServer() {
+function startServer(kv: Deno.Kv) {
   Deno.serve(async (req) => {
     const url = req.url;
     const path = new URL(url).pathname;
@@ -105,7 +103,7 @@ function startServer() {
       return serveFile(req, "index.html");
     } else if (path === "/pkgs-count") {
       const pkgs = (await Array.fromAsync(
-        KV.list({ prefix: ["packages", "count"] }),
+        kv.list({ prefix: ["packages", "count"] }),
       ))
         .map(({ key: _key, value }) => {
           return value;
@@ -121,6 +119,7 @@ function startServer() {
 }
 
 if (import.meta.main) {
-  startCronJob();
-  startServer();
+  const kv = await Deno.openKv();
+  startCronJob(kv);
+  startServer(kv);
 }
