@@ -30,7 +30,7 @@
       .source-link {
         display: block; /* Make it a block element */
         text-align: center; /* Center the text */
-        margin-bottom: 20px; /* Space below the link */
+        margin-bottom: 10px; /* Space below the link */
         font-size: 0.9em; /* Slightly smaller font */
       }
       .source-link a {
@@ -41,25 +41,16 @@
         text-decoration: underline;
       }
 
-      /* Container for sorting controls */
-      .sort-controls {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .sort-controls label {
-        margin-right: 8px;
-        font-weight: bold;
-      }
-      .sort-controls select {
-        padding: 5px 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background-color: #fff;
-        cursor: pointer;
+      /* Style for instruction text */
+      .sort-instruction {
+          text-align: center;
+          margin-bottom: 20px;
+          font-size: 0.95em;
+          color: #555;
       }
 
       #statsTable {
-        width: 85%; /* Slightly wider to accommodate new column */
+        width: 90%; /* Adjusted width slightly */
         margin: 30px auto;
         border-collapse: collapse;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -69,15 +60,60 @@
       #statsTable th, #statsTable td {
         border: 1px solid #ddd;
         padding: 12px 15px;
+        /* Base text-align, overridden below */
         text-align: left;
-        vertical-align: middle; /* Align content vertically */
       }
 
+       /* Ensure body cells are middle aligned */
+       #statsTable td {
+           vertical-align: middle;
+       }
+
       #statsTable thead th {
-        background-color: #4a7c59;
+        background-color: #4a7c59; /* Default header green */
         color: #ffffff;
         font-weight: bold;
+        cursor: pointer; /* Indicate clickability (overridden for Rank) */
+        position: relative;
+        user-select: none; /* Prevent text selection */
+        transition: background-color 0.2s ease-in-out; /* Smooth transition */
+        vertical-align: middle; /* Correct vertical alignment for headers */
+        text-align: left; /* Base alignment for all headers */
+         padding: 12px 15px; /* Consistent padding */
       }
+       #statsTable thead th:hover {
+         background-color: #3e684b; /* Darker green on hover (except Rank) */
+       }
+       #statsTable thead th.sorted {
+         background-color: #2a5a38; /* Even darker green when sorted */
+       }
+
+       /* Disable hover effect and set default cursor for Rank */
+       #statsTable thead th[data-column="rank"] {
+           cursor: default;
+       }
+        #statsTable thead th[data-column="rank"]:hover {
+           background-color: #4a7c59; /* Keep original background on hover */
+       }
+
+
+      /* Style for sort arrows */
+      .sort-arrow {
+        font-size: 0.9em;
+        margin-left: 6px;
+        opacity: 0.6;
+        width: 1em;
+        display: inline-block;
+        text-align: center; /* Keep arrow centered in its space */
+        font-weight: normal;
+        color: #b0d1b9;
+      }
+      #statsTable thead th.sorted .sort-arrow {
+        opacity: 1;
+        font-weight: bold;
+        color: #ffffff;
+      }
+
 
       #statsTable tbody tr:nth-child(even) {
         background-color: #f9f9f9;
@@ -87,26 +123,35 @@
         background-color: #eef;
       }
 
+       /* Style for tbody when sorting */
+      #statsTable tbody.is-sorting {
+          opacity: 0.7;
+      }
+
       /* Style links within the table */
       #statsTable td a {
-        color: #0056b3; /* Standard link blue */
-        text-decoration: none; /* Remove underline by default */
+        color: #0056b3;
+        text-decoration: none;
       }
       #statsTable td a:hover {
-        text-decoration: underline; /* Underline on hover */
+        text-decoration: underline;
         color: #003d80;
       }
 
-      /* Align numeric counts (Download & Dependent) to the right */
-      #statsTable td:nth-child(4),
-      #statsTable td:nth-child(5) {
+      /* Align specific cell content (td) to the right */
+      #statsTable td:nth-child(1), /* Rank */
+      #statsTable td:nth-child(4), /* Download */
+      #statsTable td:nth-child(5), /* Dependent */
+      #statsTable td:nth-child(6) { /* Score */
         text-align: right;
-        font-family: Consolas, monospace; /* Monospace for numbers */
+        font-family: Consolas, monospace;
       }
 
-      /* Align numeric headers to the right as well */
-      #statsTable th:nth-child(4),
-      #statsTable th:nth-child(5) {
+      /* Align specific header text (th) to the right */
+       #statsTable th:nth-child(1), /* Rank */
+       #statsTable th:nth-child(4), /* Download */
+       #statsTable th:nth-child(5), /* Dependent */
+       #statsTable th:nth-child(6) { /* Score */
         text-align: right;
       }
 
@@ -125,7 +170,6 @@
   <body>
     <h1>JSR Module Usage Statistics</h1>
 
-    <!-- Source Code Link -->
     <div class="source-link">
       <a
         href="https://github.com/sigmaSd/jsr-stats"
@@ -136,40 +180,38 @@
       </a>
     </div>
 
-    <!-- Sorting Controls -->
-    <div class="sort-controls">
-      <label for="sortSelect">Sort by:</label>
-      <select id="sortSelect">
-        <option value="count" selected>Download Count</option>
-        <option value="dependentCount">Dependent Count</option>
-      </select>
-    </div>
+    <p class="sort-instruction">
+        Click on any sortable column header (Scope, Name, Counts, Score) to sort the table.
+    </p>
 
     <table id="statsTable">
       <thead>
         <tr>
-          <th>Rank</th>
-          <th>Scope</th>
-          <th>Name</th>
-          <th>Download Count</th>
-          <th>Dependent Count</th>
+          <th data-column="rank">Rank</th>
+          <th data-column="scope">Scope<span class="sort-arrow"></span></th>
+          <th data-column="name">Name<span class="sort-arrow"></span></th>
+          <th data-column="count">Download Count<span class="sort-arrow"></span></th>
+          <th data-column="dependentCount">Dependent Count<span class="sort-arrow"></span></th>
+          <th data-column="score">Score<span class="sort-arrow"></span></th>
         </tr>
       </thead>
       <tbody id="tableBody">
-        <!-- Data rows will be inserted here by JavaScript -->
         <tr>
-          <td colspan="5" class="loading">Loading data...</td>
+          <td colspan="6" class="loading">Loading data...</td>
         </tr>
       </tbody>
     </table>
 
     <script>
       const tableBody = document.getElementById("tableBody");
-      const sortSelect = document.getElementById("sortSelect"); // Get the select element
+      const tableHead = document.querySelector("#statsTable thead");
       const dataUrl = "/pkgs-count";
-      const initialSortOrder = "desc"; // Always sort descending for counts
 
-      let originalData = []; // Store the original fetched data
+      let originalData = [];
+      let currentSort = {
+          column: 'count', // Default sort
+          order: 'desc'
+      };
 
       // --- Data Fetching ---
       async function fetchData() {
@@ -178,35 +220,29 @@
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
-          originalData = await response.json(); // Store fetched data
-
-          // Perform initial sort based on the default select value
-          handleSort();
+          originalData = await response.json();
+          const initiallySortedData = sortData(originalData, currentSort.column, currentSort.order);
+          renderTable(initiallySortedData);
         } catch (error) {
           console.error("Error fetching data:", error);
           tableBody.innerHTML =
-            `<tr><td colspan="5" class="error">Failed to load data: ${error.message}</td></tr>`; // Updated colspan
+              `<tr><td colspan="6" class="error">Failed to load data: ${error.message}</td></tr>`;
+          throw error;
         }
       }
 
       // --- Sorting Logic ---
-      function sortData(data, column, order = "desc") { // Default order to desc
-        // Create a copy to avoid modifying the original fetched array if needed elsewhere
+      function sortData(data, column, order = "desc") {
         const sortedData = [...data];
-
         sortedData.sort((a, b) => {
           let valA = a[column];
           let valB = b[column];
+          valA = valA === undefined || valA === null ? (typeof valB === 'number' ? 0 : '') : valA;
+          valB = valB === undefined || valB === null ? (typeof valA === 'number' ? 0 : '') : valB;
 
-          // Handle potential missing values for dependentCount gracefully
-          valA = valA === undefined || valA === null ? 0 : valA;
-          valB = valB === undefined || valB === null ? 0 : valB;
-
-          // Handle numeric vs string comparison (though both counts should be numeric)
           if (typeof valA === "number" && typeof valB === "number") {
             return order === "asc" ? valA - valB : valB - valA;
           } else {
-            // Fallback for unexpected types (less likely with counts)
             valA = String(valA).toLowerCase();
             valB = String(valB).toLowerCase();
             if (valA < valB) return order === "asc" ? -1 : 1;
@@ -219,66 +255,140 @@
 
       // --- Rendering Logic ---
       function renderTable(data) {
-        tableBody.innerHTML = ""; // Clear previous content
+        updateHeaderArrows();
+        tableBody.innerHTML = "";
 
         if (!data || data.length === 0) {
           tableBody.innerHTML =
-            '<tr><td colspan="5" class="loading">No data found.</td></tr>'; // Updated colspan
+            '<tr><td colspan="6" class="loading">No data found.</td></tr>';
           return;
         }
 
-        data.forEach((item, idx) => { // Use forEach directly with index
-          const row = tableBody.insertRow();
+        const fragment = document.createDocumentFragment();
+        data.forEach((item, idx) => {
+          const row = document.createElement('tr');
 
-          // Rank Cell
-          const rankCell = row.insertCell();
+          const rankCell = document.createElement('td');
           rankCell.textContent = idx + 1;
+          row.appendChild(rankCell);
 
-          // Scope Cell (with link)
-          const scopeCell = row.insertCell();
+          const scopeCell = document.createElement('td');
           const scopeLink = document.createElement("a");
           scopeLink.href = `https://jsr.io/@${item.scope}`;
           scopeLink.textContent = item.scope;
           scopeLink.target = "_blank";
           scopeLink.rel = "noopener noreferrer";
           scopeCell.appendChild(scopeLink);
+          row.appendChild(scopeCell);
 
-          // Name Cell (with link)
-          const nameCell = row.insertCell();
+          const nameCell = document.createElement('td');
           const nameLink = document.createElement("a");
           nameLink.href = `https://jsr.io/@${item.scope}/${item.name}`;
           nameLink.textContent = item.name;
           nameLink.target = "_blank";
           nameLink.rel = "noopener noreferrer";
           nameCell.appendChild(nameLink);
+          row.appendChild(nameCell);
 
-          // Download Count Cell
-          const countCell = row.insertCell();
-          // Use 0 if count is missing/null
+          const countCell = document.createElement('td');
           countCell.textContent = (item.count ?? 0).toLocaleString();
+          row.appendChild(countCell);
 
-          // Dependent Count Cell (New)
-          const dependentCountCell = row.insertCell();
-          // Use 0 if dependentCount is missing/null
-          dependentCountCell.textContent = (item.dependentCount ?? 0)
-            .toLocaleString();
+          const dependentCountCell = document.createElement('td');
+          dependentCountCell.textContent = (item.dependentCount ?? 0).toLocaleString();
+          row.appendChild(dependentCountCell);
+
+           const scoreCell = document.createElement('td');
+           scoreCell.textContent = (item.score ?? 0).toLocaleString();
+           row.appendChild(scoreCell);
+
+           fragment.appendChild(row);
         });
+        tableBody.appendChild(fragment);
       }
 
-      // --- Handle Sorting ---
-      function handleSort() {
-        const sortByColumn = sortSelect.value; // Get selected column ('count' or 'dependentCount')
-        const sortedData = sortData(
-          originalData,
-          sortByColumn,
-          initialSortOrder,
-        );
-        renderTable(sortedData);
+       // --- Update Header Arrows/Style ---
+       function updateHeaderArrows() {
+           tableHead.querySelectorAll('th').forEach(th => {
+               const column = th.dataset.column;
+               if (column === 'rank') {
+                   th.classList.remove('sorted');
+                   return;
+               }
+
+               const arrowSpan = th.querySelector('.sort-arrow');
+               if (!arrowSpan) return;
+
+               if (column === currentSort.column) {
+                   th.classList.add('sorted');
+                   arrowSpan.textContent = currentSort.order === 'asc' ? '▲' : '▼';
+               } else {
+                   th.classList.remove('sorted');
+                   arrowSpan.textContent = '';
+               }
+           });
+       }
+
+      // --- Handle Sorting Trigger ---
+      function handleSortTrigger(column, order) {
+        tableBody.classList.add('is-sorting');
+        document.body.style.cursor = 'wait';
+
+        setTimeout(() => {
+          try {
+            const dataToSort = sortData(originalData, column, order);
+            renderTable(dataToSort);
+          } finally {
+            tableBody.classList.remove('is-sorting');
+            document.body.style.cursor = '';
+          }
+        }, 0);
       }
 
-      // --- Initial Load & Event Listener ---
-      document.addEventListener("DOMContentLoaded", fetchData); // Fetch data on load
-      sortSelect.addEventListener("change", handleSort); // Re-sort when selection changes
+      // --- Event Listener for Header Clicks ---
+       tableHead.addEventListener('click', (event) => {
+           const targetHeader = event.target.closest('th');
+           if (!targetHeader || !targetHeader.dataset.column) return;
+
+           const newColumn = targetHeader.dataset.column;
+
+           if (newColumn === 'rank') {
+               return;
+           }
+
+           if (tableBody.classList.contains('is-sorting')) {
+               return;
+           }
+
+           let newOrder;
+           const defaultSortOrders = {
+               scope: 'asc', name: 'asc',
+               count: 'desc', dependentCount: 'desc', score: 'desc'
+           };
+
+           if (currentSort.column === newColumn) {
+               newOrder = currentSort.order === 'asc' ? 'desc' : 'asc';
+           } else {
+               newOrder = defaultSortOrders[newColumn] || 'asc';
+           }
+
+           currentSort = { column: newColumn, order: newOrder };
+           handleSortTrigger(currentSort.column, currentSort.order);
+       });
+
+      // --- Initial Load ---
+      document.addEventListener("DOMContentLoaded", async () => {
+          tableBody.innerHTML = `<tr><td colspan="6" class="loading">Loading data...</td></tr>`;
+          document.body.style.cursor = 'wait';
+          try {
+              await fetchData();
+          } catch (error) {
+             // Error shown in table
+          } finally {
+             document.body.style.cursor = '';
+          }
+      });
+
     </script>
   </body>
 </html>

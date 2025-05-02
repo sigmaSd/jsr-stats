@@ -113,6 +113,16 @@ function startServer(kv: Deno.Kv) {
       return new Response(JSON.stringify(pkgs), {
         headers: { "Content-Type": "application/json" },
       });
+    } else if (path === "/favicon.ico") {
+      // Return inline SVG favicon
+      const faviconSvg =
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="#f5c211"><circle cx="8" cy="8" r="8"/></svg>`;
+      return new Response(faviconSvg, {
+        headers: {
+          "Content-Type": "image/svg+xml",
+          "Cache-Control": "max-age=3600",
+        },
+      });
     }
     return serveFile(req, path.slice(1)); // remove leading slash
   });
