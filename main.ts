@@ -89,13 +89,15 @@ async function updateStats() {
   }
 }
 
-if (import.meta.main) {
+function startCronJob() {
   console.log("Cron job started, updating stats every day");
   Deno.cron("update stats", "0 0 * * *", async () => {
     console.log("Updating stats...");
     await updateStats();
   });
+}
 
+function startServer() {
   Deno.serve(async (req) => {
     const url = req.url;
     const path = new URL(url).pathname;
@@ -116,4 +118,9 @@ if (import.meta.main) {
     }
     return serveFile(req, path.slice(1)); // remove leading slash
   });
+}
+
+if (import.meta.main) {
+  startCronJob();
+  startServer();
 }
