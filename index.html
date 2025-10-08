@@ -49,6 +49,68 @@
           color: #555;
       }
 
+      /* Stats Overview Section */
+      .stats-overview {
+        max-width: 90%;
+        margin: 30px auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        color: white;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .stat-card.green {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      }
+
+      .stat-card.blue {
+        background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+      }
+
+      .stat-card.orange {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .stat-card.purple {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .stat-card-label {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin-bottom: 10px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .stat-card-value {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .stat-card-date {
+        font-size: 0.85em;
+        opacity: 0.8;
+        margin-top: 10px;
+        font-style: italic;
+      }
+
       #statsTable {
         width: 90%; /* Adjusted width slightly */
         margin: 30px auto;
@@ -180,6 +242,27 @@
       </a>
     </div>
 
+    <!-- Stats Overview Section -->
+    <div class="stats-overview" id="statsOverview">
+      <div class="stat-card green">
+        <div class="stat-card-label">Total Packages</div>
+        <div class="stat-card-value" id="totalPackages">...</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-card-label">Perfect Score (100%)</div>
+        <div class="stat-card-value" id="perfectScore">...</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-card-label">Total Downloads</div>
+        <div class="stat-card-value" id="totalDownloads">...</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-card-label">Last Updated</div>
+        <div class="stat-card-value" id="lastUpdated" style="font-size: 1.2em;">...</div>
+        <div class="stat-card-date" id="lastUpdatedTime"></div>
+      </div>
+    </div>
+
     <p class="sort-instruction">
         Click on any sortable column header (Scope, Name, Counts, Score) to sort the table.
     </p>
@@ -221,6 +304,10 @@
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
           originalData = await response.json();
+
+          // Calculate and display stats
+          updateStatsOverview(originalData);
+
           const initiallySortedData = sortData(originalData, currentSort.column, currentSort.order);
           renderTable(initiallySortedData);
         } catch (error) {
@@ -229,6 +316,40 @@
               `<tr><td colspan="6" class="error">Failed to load data: ${error.message}</td></tr>`;
           throw error;
         }
+      }
+
+      // --- Update Stats Overview ---
+      function updateStatsOverview(data) {
+        // Total Packages
+        const totalPackages = data.length;
+        document.getElementById('totalPackages').textContent = totalPackages.toLocaleString();
+
+        // Perfect Score Count (score === 100)
+        const perfectScoreCount = data.filter(pkg => pkg.score === 100).length;
+        document.getElementById('perfectScore').textContent = perfectScoreCount.toLocaleString();
+
+        // Total Downloads
+        const totalDownloads = data.reduce((sum, pkg) => sum + (pkg.count || 0), 0);
+        document.getElementById('totalDownloads').textContent = formatLargeNumber(totalDownloads);
+
+        // Last Updated Date
+        const now = new Date();
+        const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+        const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+        document.getElementById('lastUpdated').textContent = now.toLocaleDateString('en-US', dateOptions);
+        document.getElementById('lastUpdatedTime').textContent = now.toLocaleTimeString('en-US', timeOptions);
+      }
+
+      // --- Format Large Numbers ---
+      function formatLargeNumber(num) {
+        if (num >= 1000000000) {
+          return (num / 1000000000).toFixed(1) + 'B';
+        } else if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toLocaleString();
       }
 
       // --- Sorting Logic ---
