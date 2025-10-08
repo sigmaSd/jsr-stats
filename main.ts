@@ -85,6 +85,9 @@ async function updateStats(kv: Deno.Kv) {
     const chunk = pkgs.slice(i, i + chunkSize);
     await kv.set(["packages", "count", i], chunk);
   }
+
+  // Store the update timestamp
+  await kv.set(["packages", "lastUpdated"], new Date().toISOString());
 }
 
 function startCronJob(kv: Deno.Kv) {
@@ -111,6 +114,11 @@ function startServer(kv: Deno.Kv) {
         // deno-lint-ignore no-explicit-any
         .reduce((acc: any, curr) => acc.concat(curr), []);
       return new Response(JSON.stringify(pkgs), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } else if (path === "/last-updated") {
+      const lastUpdated = await kv.get(["packages", "lastUpdated"]);
+      return new Response(JSON.stringify({ lastUpdated: lastUpdated.value }), {
         headers: { "Content-Type": "application/json" },
       });
     } else if (path === "/favicon.ico") {

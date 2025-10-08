@@ -289,6 +289,7 @@
       const tableBody = document.getElementById("tableBody");
       const tableHead = document.querySelector("#statsTable thead");
       const dataUrl = "/pkgs-count";
+      const lastUpdatedUrl = "/last-updated";
 
       let originalData = [];
       let currentSort = {
@@ -305,8 +306,12 @@
           }
           originalData = await response.json();
 
+          // Fetch last updated timestamp
+          const lastUpdatedResponse = await fetch(lastUpdatedUrl);
+          const lastUpdatedData = await lastUpdatedResponse.json();
+
           // Calculate and display stats
-          updateStatsOverview(originalData);
+          updateStatsOverview(originalData, lastUpdatedData.lastUpdated);
 
           const initiallySortedData = sortData(originalData, currentSort.column, currentSort.order);
           renderTable(initiallySortedData);
@@ -319,7 +324,7 @@
       }
 
       // --- Update Stats Overview ---
-      function updateStatsOverview(data) {
+      function updateStatsOverview(data, lastUpdatedISO) {
         // Total Packages
         const totalPackages = data.length;
         document.getElementById('totalPackages').textContent = totalPackages.toLocaleString();
@@ -333,11 +338,16 @@
         document.getElementById('totalDownloads').textContent = formatLargeNumber(totalDownloads);
 
         // Last Updated Date
-        const now = new Date();
-        const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-        const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-        document.getElementById('lastUpdated').textContent = now.toLocaleDateString('en-US', dateOptions);
-        document.getElementById('lastUpdatedTime').textContent = now.toLocaleTimeString('en-US', timeOptions);
+        if (lastUpdatedISO) {
+          const lastUpdatedDate = new Date(lastUpdatedISO);
+          const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+          const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+          document.getElementById('lastUpdated').textContent = lastUpdatedDate.toLocaleDateString('en-US', dateOptions);
+          document.getElementById('lastUpdatedTime').textContent = lastUpdatedDate.toLocaleTimeString('en-US', timeOptions);
+        } else {
+          document.getElementById('lastUpdated').textContent = 'Unknown';
+          document.getElementById('lastUpdatedTime').textContent = '';
+        }
       }
 
       // --- Format Large Numbers ---
